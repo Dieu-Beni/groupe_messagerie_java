@@ -1,0 +1,110 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.Cursor?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.ScrollPane?>
+<?import javafx.scene.control.TextArea?>
+<?import javafx.scene.effect.Glow?>
+<?import javafx.scene.effect.InnerShadow?>
+<?import javafx.scene.image.Image?>
+<?import javafx.scene.image.ImageView?>
+<?import javafx.scene.layout.AnchorPane?>
+<?import javafx.scene.layout.Pane?>
+<?import javafx.scene.layout.VBox?>
+<?import javafx.scene.text.Font?>
+
+<AnchorPane prefHeight="625.0" prefWidth="707.0" style="-fx-background-color: black;" xmlns="http://javafx.com/javafx/23.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="jins.db.whatsappgroup.controllers.MainController">
+   <children>
+      <Pane layoutY="554.0" prefHeight="71.0" prefWidth="708.0">
+         <children>
+            <Button fx:id="sendButon" layoutX="623.0" layoutY="5.0" mnemonicParsing="false" onAction="#sendMessage" prefHeight="55.0" prefWidth="58.0" style="-fx-background-color: #322f2f;" textFill="#322f2f">
+               <font>
+                  <Font name="Franklin Gothic Medium Cond" size="18.0" />
+               </font>
+               <cursor>
+                  <Cursor fx:constant="HAND" />
+               </cursor>
+               <graphic>
+                  <ImageView fitHeight="50.0" fitWidth="47.0" pickOnBounds="true">
+                     <image>
+                        <Image url="@../images/send.png" />
+                     </image>
+                  </ImageView>
+               </graphic>
+            </Button>
+            <TextArea fx:id="messageInput" layoutX="135.0" layoutY="5.0" prefHeight="62.0" prefWidth="456.0" promptText="Votre message ici" scrollLeft="1.0" wrapText="true">
+               <font>
+                  <Font size="18.0" />
+               </font>
+            </TextArea>
+            <Button layoutX="37.0" layoutY="5.0" mnemonicParsing="false" onAction="#affiche_emoji" prefHeight="62.0" prefWidth="81.0" text="Emoji">
+               <cursor>
+                  <Cursor fx:constant="HAND" />
+               </cursor>
+            </Button>
+         </children>
+      </Pane>
+      <ScrollPane fx:id="scrollPane" layoutX="135.0" layoutY="62.0" prefHeight="490.0" prefWidth="456.0">
+         <content>
+            <VBox fx:id="messagesBox" prefHeight="471.0" prefWidth="450.0">
+               <padding>
+                  <Insets left="10.0" right="10.0" />
+               </padding></VBox>
+         </content>
+         <effect>
+            <Glow level="0.21">
+               <input>
+                  <InnerShadow />
+               </input>
+            </Glow>
+         </effect>
+      </ScrollPane>
+      <Label layoutX="222.0" layoutY="15.0" text="Notre Groupe WhatsApp" textAlignment="CENTER" textFill="#4fe100">
+         <font>
+            <Font name="Times New Roman Bold Italic" size="36.0" />
+         </font>
+      </Label>
+      <Button layoutX="616.0" layoutY="62.0" mnemonicParsing="false" onAction="#logOut" prefHeight="62.0" prefWidth="71.0" style="-fx-background-color: black;">
+         <graphic>
+            <ImageView fitHeight="54.0" fitWidth="137.0" pickOnBounds="true" preserveRatio="true">
+               <image>
+                  <Image url="@../images/logout.png" />
+               </image>
+            </ImageView>
+         </graphic>
+         <cursor>
+            <Cursor fx:constant="HAND" />
+         </cursor>
+      </Button>
+      <Label layoutX="611.0" layoutY="130.0" text="Deconnexion" textFill="WHITE">
+         <font>
+            <Font size="14.0" />
+         </font>
+      </Label>
+      <ImageView fitHeight="62.0" fitWidth="61.0" layoutX="135.0" layoutY="5.0" pickOnBounds="true" preserveRatio="true">
+         <image>
+            <Image url="@../images/group.png" />
+         </image>
+      </ImageView>
+      <Button layoutX="21.0" layoutY="62.0" mnemonicParsing="false" onAction="#showProfil" prefHeight="62.0" prefWidth="76.0" style="-fx-background-color: black;">
+         <graphic>
+            <ImageView fitHeight="60.0" fitWidth="96.0" pickOnBounds="true" preserveRatio="true">
+               <image>
+                  <Image url="@../images/profile.png" />
+               </image>
+            </ImageView>
+         </graphic>
+         <cursor>
+            <Cursor fx:constant="HAND" />
+         </cursor>
+      </Button>
+      <Label layoutX="43.0" layoutY="140.0" text="Profil" textFill="WHITE">
+         <font>
+            <Font size="14.0" />
+         </font>
+      </Label>
+      
+   </children>
+</AnchorPane>
