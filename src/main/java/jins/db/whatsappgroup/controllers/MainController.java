@@ -1,35 +1,38 @@
 package jins.db.whatsappgroup.controllers;
 
-import com.vdurmont.emoji.Emoji;
-import com.vdurmont.emoji.EmojiManager;
 import javafx.application.Platform;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
+import javafx.fxml.FXMLLoader;
+import javafx.geometry.Bounds;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
+import javafx.scene.Node;
+import javafx.scene.Parent;
+import javafx.scene.Scene;
 import javafx.scene.control.*;
-import javafx.scene.layout.GridPane;
-import javafx.scene.layout.HBox;
-import javafx.scene.layout.Region;
-import javafx.scene.layout.VBox;
+import javafx.scene.image.Image;
+import javafx.scene.image.ImageView;
+import javafx.scene.layout.*;
+import javafx.scene.text.Text;
+import javafx.scene.text.TextFlow;
+import javafx.stage.Popup;
+import javafx.stage.Window;
 import jins.db.whatsappgroup.models.Membre;
 import jins.db.whatsappgroup.models.Message;
 import jins.db.whatsappgroup.services.impl.MembreImpl;
 import jins.db.whatsappgroup.services.impl.MessageImpl;
-import jins.db.whatsappgroup.tools.Notification;
-import jins.db.whatsappgroup.tools.Outils;
+import jins.db.whatsappgroup.tools.*;
 
 import javax.sound.sampled.*;
 import java.io.*;
 import java.net.Socket;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.Collection;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Objects;
 
-import static jins.db.whatsappgroup.HelloApplication.entityManager;
+import static jins.db.whatsappgroup.WhatsappgroupApplication.entityManager;
 
 
 public class MainController {
@@ -39,11 +42,7 @@ public class MainController {
     private final Membre membre = ConnexionController.membre;
     private final static MessageImpl messageImpl = new MessageImpl(entityManager);
     private final static MembreImpl membreImpl = new MembreImpl(entityManager);
-    private boolean isEmojiVis = false;
-    private GridPane emojiGrid = new GridPane();
-
-
-
+    private Popup emojiPopup ;
 
     @FXML
     private TextArea messageInput;
@@ -62,8 +61,8 @@ public class MainController {
             List<Message> messages = messageImpl.findAllMessages();
             for (Message message : messages) {
                 afficherMessage(message.getMembre().getPseudo(), message.getContenu(),  message.getDateEnvoi());
+
             }
-            displayEmoji();
             startConnection();
         }
         else if (sendButon != null) {
@@ -88,9 +87,18 @@ public class MainController {
                 Notification.NotifSuccess("Connecté", response);
                 listenToServer(); // Lancer le thread d'écoute
             } else if (response.equals("ERREUR: Le groupe est plein!")){
+                if (sendButon != null){
+                    sendButon.setDisable(true);
+                }
                 Notification.NotifError("Erreur", "Le groupe est plein!");
+                if (sendButon != null){
+                    sendButon.setDisable(true);
+                }
                 closeConnection();
             }else {
+                if (sendButon != null){
+                    sendButon.setDisable(true);
+                }
                 Notification.NotifError("Erreur", "Nom d'utilisateur déjà pris ou refusé.");
                 closeConnection();
             }
@@ -117,7 +125,6 @@ public class MainController {
                         int begin = line.indexOf('[');
                         int end = line.indexOf(']');
 
-                        String ms = line.substring(begin + 1, end);
                         Platform.runLater(() -> {
                             try {
                                 displaySound();
@@ -132,6 +139,16 @@ public class MainController {
                         afficherMessage("SYSTEME", line, null);
                     }
                     if (line.equals("ERREUR: Nom d'utilisateur déjà pris !")){
+
+                        Platform.runLater(() -> {
+                            try {
+                                displaySound();
+                            } catch (UnsupportedAudioFileException | IOException | LineUnavailableException e) {
+                                System.out.println(e.getMessage());
+                                throw new RuntimeException(e);
+                            }
+                        });
+
                         afficherMessage("SYSTEME", line, null);
                         return;
                     }if (line.equals("Vous etes bani du groupe pour message injurieux!!")){
@@ -181,17 +198,16 @@ public class MainController {
         boolean isMoi = expediteur.equals(membre.getPseudo());
         Label pseudo = new Label(expediteur.toUpperCase());
         pseudo.setStyle("-fx-font-size: 15;  -fx-text-fill: grey;");
-        Label messageLabel = new Label(message);
+        TextFlow formatted = new TextFlow();
 
-        messageLabel.setWrapText(true);
-        messageLabel.setMinHeight(Region.USE_PREF_SIZE);
-        //String color = "#DCF8C6";
-        messageLabel.setStyle("-fx-padding: 10; -fx-background-radius: 10; " +
+        formatted.setStyle("-fx-padding: 10; -fx-background-radius: 10; " +
                 (isMoi ? "-fx-background-color: #4fe100;" : "-fx-background-color: #E4E6EB;")+
-                "-fx-font-family: 'Times New Roman'; -fx-font-size: 20"
+                "-fx-font-family: 'Segoe UI Emoji'; -fx-font-size: 20"
         );
-        messageLabel.setMaxWidth(300);
-        VBox vBox = isMoi ? new VBox(messageLabel, timeLabel) :  new VBox(pseudo, messageLabel,timeLabel);
+        formatted.setPrefHeight(Region.USE_PREF_SIZE);
+        formatted.setMaxWidth(300);
+        displayFormattedMessage(message, formatted);
+        VBox vBox = isMoi ? new VBox(formatted, timeLabel) :  new VBox(pseudo, formatted,timeLabel);
         HBox bubble = new HBox(vBox);
         bubble.setFillHeight(true);
         bubble.setSpacing(50);
@@ -215,7 +231,7 @@ public class MainController {
     @FXML
     void logOut(ActionEvent event) throws IOException {
         closeConnection();
-        Outils.load(event, "Menu", "hello-view.fxml");
+        Outils.load(event, "Menu", "menu.fxml");
     }
 
     @FXML
@@ -223,43 +239,35 @@ public class MainController {
         closeConnection();
         Outils.load(event, "Profil", "views/profil.fxml");
     }
-    void showAlert(String content)  {
-        Alert alert = new Alert(Alert.AlertType.INFORMATION);
-        alert.setTitle("Nouveau Message");
-        alert.setHeaderText("Vous avez recu un nouveau message");
-        alert.setContentText(content);
-        alert.showAndWait();
-    }
-
     @FXML
-    void affiche_emoji(ActionEvent event) throws IOException {
-        isEmojiVis = ! isEmojiVis;
-        emojiGrid.setVisible(isEmojiVis);
-        messagesBox.getChildren().add(emojiGrid);
-    }
-    void displayEmoji2(){
+    void affiche_emoji(ActionEvent event) throws Exception {
+        if (emojiPopup != null && emojiPopup.isShowing()) {
+            emojiPopup.hide(); // Toggle: si déjà visible, on ferme
+            return;
+        }
+       try {
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/jins/db/whatsappgroup/views/EmojiList.fxml"));
+            Parent emojiPane = loader.load();
 
-        Collection<Emoji> emojis = EmojiManager.getAll();
-        Iterator<Emoji> iterator = emojis.iterator();
-        int column = 0;
-        int row = 0;
-        while (iterator.hasNext()) {
-            Emoji emoji = iterator.next();
-            Button emojiButton = new Button(emoji.getUnicode());
-            emojiButton.setStyle("-fx-font-size: 24; -fx-font-family: 'Segoe UI Emoji';");
-            emojiButton.setOnMouseClicked((event) -> {
-                if (messageInput != null){
-                    messageInput.setText(messageInput.getText()+" "+emoji.getUnicode());
-                }
-                isEmojiVis = false;
-                emojiGrid.setVisible(false);
-            });
-            emojiGrid.add(emojiButton, column, row);
-            column++;
-            if (column == 4) {
-                column = 0;
-                row++;
-            }
+            emojiPopup = new Popup();
+            emojiPopup.getContent().add(emojiPane);
+            emojiPopup.setAutoHide(true); // se ferme quand on clique en dehors
+
+
+            EmojiListController emojiController = loader.getController();
+            emojiController.setMessageInput(this.messageInput);
+
+
+            Node sourceNode = (Node) event.getSource();
+            Scene scene = sourceNode.getScene();
+            Window window = scene.getWindow();
+
+
+            Bounds bounds = sourceNode.localToScreen(sourceNode.getBoundsInLocal());
+            emojiPopup.show(window, bounds.getMinX(), -bounds.getMinY()+800);
+
+        } catch (IOException e) {
+            e.printStackTrace();
         }
     }
     void displaySound() throws LineUnavailableException, UnsupportedAudioFileException, IOException {
@@ -286,53 +294,33 @@ public class MainController {
         clip.open(convertedAudio);
         clip.start();
     }
-    void displayEmoji() {
-        emojiGrid.getChildren().clear(); // Nettoyer avant d'ajouter
 
-        Collection<Emoji> emojis = EmojiManager.getAll();
-        int column = 0;
-        int row = 0;
+    public void displayFormattedMessage(String rawMessage, TextFlow outputFlow) {
+        outputFlow.getChildren().clear();
 
-        for (Emoji emoji : emojis) {
-            Button emojiButton = new Button(emoji.getUnicode());
-            emojiButton.setPrefSize(50, 50); // Taille carrée
-            emojiButton.setStyle("""
-            -fx-font-size: 24;
-            -fx-font-family: 'Segoe UI Emoji';
-            -fx-background-radius: 8;
-            -fx-background-color: transparent;
-            -fx-cursor: hand;
-        """);
+        int i = 0;
+        while (i < rawMessage.length()) {
+            int codePoint = rawMessage.codePointAt(i);
+            String currentChar = new String(Character.toChars(codePoint));
 
-            // Style au survol
-            emojiButton.setOnMouseEntered(e ->
-                    emojiButton.setStyle(emojiButton.getStyle() + "-fx-background-color: #e0e0e0;")
-            );
-            emojiButton.setOnMouseExited(e ->
-                    emojiButton.setStyle(emojiButton.getStyle().replace("-fx-background-color: #e0e0e0;", ""))
-            );
+            String shortName = EmojiOne.getInstance().unicodeToShortname(currentChar);
+            Emoji emoji = EmojiOne.getInstance().getEmoji(shortName);
 
-            emojiButton.setOnMouseClicked(event -> {
-                if (messageInput != null) {
-                    messageInput.setText(messageInput.getText() + emoji.getUnicode());
-                }
-                isEmojiVis = false;
-                emojiGrid.setVisible(false);
-            });
+            if (emoji != null) {
+                // Emoji reconnu : afficher une image
+                String hex = emoji.getHex(); // ex: 1f602
+                Image img = new Image(getClass().getResourceAsStream("/jins/db/whatsappgroup/png_40/" + hex + ".png"), 20, 20, true, true);
+                ImageView imageView = new ImageView(img);
 
-            emojiGrid.add(emojiButton, column, row);
-            column++;
-            if (column == 4) { // Plus d'emojis par ligne
-                column = 0;
-                row++;
+                imageView.setTranslateY(3); // ajuste verticalement si besoin
+                outputFlow.getChildren().add(imageView);
+            } else {
+                // Sinon, ajouter le caractère normalement
+                outputFlow.getChildren().add(new Text(currentChar));
             }
+
+            i += Character.charCount(codePoint);
         }
-
-        // Appliquer marges et padding
-        emojiGrid.setHgap(10);
-        emojiGrid.setVgap(10);
-        emojiGrid.setPadding(new Insets(10));
     }
-
 
 }

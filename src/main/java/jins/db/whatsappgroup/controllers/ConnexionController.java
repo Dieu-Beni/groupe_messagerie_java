@@ -16,7 +16,7 @@ import jins.db.whatsappgroup.tools.Utils;
 import java.io.IOException;
 import java.util.Optional;
 
-import static jins.db.whatsappgroup.HelloApplication.entityManager;
+import static jins.db.whatsappgroup.WhatsappgroupApplication.entityManager;
 
 public class ConnexionController {
 
@@ -96,7 +96,7 @@ public class ConnexionController {
 
     @FXML
     void menu(ActionEvent event) throws IOException {
-        Outils.load(event, "Menu", "hello-view.fxml");
+        Outils.load(event, "Menu", "menu.fxml");
     }
     @FXML
     void update(ActionEvent event) throws IOException {

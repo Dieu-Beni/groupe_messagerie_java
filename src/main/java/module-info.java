@@ -9,7 +9,6 @@ module jins.db.whatsappgroup {
     requires jbcrypt;
     requires java.sql;            // ← nécessaire ici
     requires org.hibernate.orm.core;
-    requires emoji.java;
     requires java.desktop;
 
 
@@ -18,4 +17,5 @@ module jins.db.whatsappgroup {
     opens jins.db.whatsappgroup.tools;
     opens jins.db.whatsappgroup.controllers to javafx.fxml;
     exports jins.db.whatsappgroup;
+    exports jins.db.whatsappgroup.controllers;
 }
